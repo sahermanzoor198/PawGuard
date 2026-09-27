@@ -1,75 +1,148 @@
 import streamlit as st
 from groq import Groq
 
+# --------------------------
+# PAGE CONFIG
+# --------------------------
+
 st.set_page_config(
     page_title="PawGuard AI",
     page_icon="🐾",
     layout="wide"
 )
 
+# --------------------------
+# HEADER
+# --------------------------
+
 st.title("🐾 PawGuard AI")
-st.subheader("AI Pet Emergency Triage Assistant")
+st.caption("AI-Powered Pet Emergency Triage Assistant")
 
-st.info(
-    "PawGuard AI provides general pet-health guidance only. "
-    "It is not a substitute for a licensed veterinarian."
+st.warning(
+    "This tool provides general pet-health guidance only and is not a substitute for professional veterinary care."
 )
 
-# Groq Client
-client = Groq(api_key=st.secrets["GROQ_API_KEY"])
+# --------------------------
+# GROQ CLIENT
+# --------------------------
 
-# Pet Information
-st.header("Pet Profile")
+try:
+    client = Groq(
+        api_key=st.secrets["GROQ_API_KEY"]
+    )
+except Exception:
+    st.error(
+        "Groq API key not found. Please add GROQ_API_KEY in Streamlit Secrets."
+    )
+    st.stop()
 
-pet_name = st.text_input("Pet Name")
+# --------------------------
+# PET PROFILE
+# --------------------------
 
-pet_type = st.selectbox(
-    "Pet Type",
-    ["Dog", "Cat", "Bird", "Rabbit", "Other"]
+st.header("🐶 Pet Profile")
+
+col1, col2 = st.columns(2)
+
+with col1:
+    pet_name = st.text_input("Pet Name")
+
+    pet_type = st.selectbox(
+        "Pet Type",
+        [
+            "Dog",
+            "Cat",
+            "Bird",
+            "Rabbit",
+            "Other"
+        ]
+    )
+
+with col2:
+    pet_age = st.number_input(
+        "Age (Years)",
+        min_value=0,
+        max_value=50,
+        value=1
+    )
+
+    pet_weight = st.number_input(
+        "Weight (kg)",
+        min_value=0.0,
+        value=1.0
+    )
+
+# --------------------------
+# EMERGENCY CHECKLIST
+# --------------------------
+
+st.header("🚨 Emergency Symptoms")
+
+emergency_symptoms = st.multiselect(
+    "Select all symptoms that apply",
+    [
+        "Difficulty Breathing",
+        "Bleeding",
+        "Seizure",
+        "Collapse",
+        "Poison Exposure",
+        "Vomiting",
+        "Not Eating",
+        "Low Energy",
+        "Diarrhea",
+        "Coughing",
+        "Fever",
+        "Limping"
+    ]
 )
 
-pet_age = st.number_input(
-    "Age (Years)",
-    min_value=0,
-    max_value=50,
-    value=1
-)
+# --------------------------
+# DETAILS
+# --------------------------
 
-pet_weight = st.number_input(
-    "Weight (kg)",
-    min_value=0.0,
-    value=1.0
-)
-
-# Symptoms
-st.header("Symptoms")
+st.header("📝 Symptom Details")
 
 symptoms = st.text_area(
-    "Describe Symptoms",
-    placeholder="Example: Vomiting, not eating, low energy"
+    "Describe what is happening",
+    placeholder="Example: My dog has been vomiting since yesterday and refuses to eat."
 )
 
-if st.button("Analyze Symptoms"):
+# --------------------------
+# ANALYZE BUTTON
+# --------------------------
+
+if st.button("🔍 Analyze Symptoms"):
 
     if symptoms.strip() == "":
-        st.warning("Please enter symptoms.")
-    else:
+        st.warning("Please describe the symptoms.")
+        st.stop()
 
-        prompt = f"""
-You are PawGuard AI, a pet emergency triage assistant.
+    prompt = f"""
+You are PawGuard AI.
 
-Pet Name: {pet_name}
-Pet Type: {pet_type}
+You help pet owners understand potential urgency levels.
+
+Pet Information:
+
+Name: {pet_name}
+Type: {pet_type}
 Age: {pet_age}
 Weight: {pet_weight} kg
 
-Symptoms:
+Emergency Symptoms:
+{", ".join(emergency_symptoms)}
+
+Detailed Symptoms:
 {symptoms}
 
-Respond using exactly this format:
+IMPORTANT:
+
+Do not claim to diagnose diseases.
+
+Provide output in exactly this format:
 
 🚨 Risk Level:
-(Low / Medium / High)
+Low / Medium / High
 
 🔍 Possible Causes:
 - Cause 1
@@ -82,10 +155,13 @@ Respond using exactly this format:
 - Action 3
 
 👨‍⚕️ Vet Recommendation:
-Explain whether a vet visit is recommended.
+Short recommendation
 
-Keep the answer simple and easy to understand.
+⚠️ Emergency Warning:
+Short warning if urgent
 """
+
+    try:
 
         with st.spinner("Analyzing symptoms..."):
 
@@ -94,7 +170,7 @@ Keep the answer simple and easy to understand.
                 messages=[
                     {
                         "role": "system",
-                        "content": "You are a helpful pet health assistant."
+                        "content": "You are a helpful pet emergency triage assistant."
                     },
                     {
                         "role": "user",
@@ -104,7 +180,16 @@ Keep the answer simple and easy to understand.
                 temperature=0.3
             )
 
-            result = response.choices[0].message.content
+        result = response.choices[0].message.content
 
         st.success("Analysis Complete")
+
         st.markdown(result)
+
+    except Exception as e:
+
+        st.error(
+            "An error occurred while contacting the AI model."
+        )
+
+        st.code(str(e))
