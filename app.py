@@ -194,9 +194,5 @@ Short warning if urgent
 
         st.code(str(e))
 
-st.markdown("---")
-st.caption(
-    "PawGuard AI • Educational Project • Not a replacement for veterinary care"
-)
 
-        st.code(str(e))
+      
