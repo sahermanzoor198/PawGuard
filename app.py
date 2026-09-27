@@ -187,10 +187,16 @@ Short warning if urgent
         st.markdown(result)
 
     except Exception as e:
-st.markdown("---")
-st.caption("PawGuard AI • Educational Project • Not a replacement for veterinary care")
+
         st.error(
             "An error occurred while contacting the AI model."
         )
+
+        st.code(str(e))
+
+st.markdown("---")
+st.caption(
+    "PawGuard AI • Educational Project • Not a replacement for veterinary care"
+)
 
         st.code(str(e))
