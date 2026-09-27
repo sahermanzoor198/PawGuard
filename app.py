@@ -90,7 +90,7 @@ Keep the answer simple and easy to understand.
         with st.spinner("Analyzing symptoms..."):
 
             response = client.chat.completions.create(
-                model="llama-3.3-70b-versatile",
+                model="openai/gpt-oss-120b",
                 messages=[
                     {
                         "role": "system",
